@@ -16,12 +16,14 @@ func init():
 	for card in deck:
 		card.queue_free();
 	deck = [];
+	var sprite_scale = _get_card_sprite_scale()
 	for suit in SUIT:
 		for rank in RANK:
 			var card = CARD_TILE.instance()
 			var sprite_name = SPRITE_NAME_TEMPLATE % [SUIT[suit], RANK[rank]]
 			card.init(suit, rank, load(sprite_name))
 			card.visible = false
+			card.scale = sprite_scale
 			deck.push_back(card)
 	assert(deck.size() == 52)
 	deck.shuffle()
@@ -38,3 +40,9 @@ func return_cards(cards):
 		deck.push_back(card)
 	assert(deck.size() <= 52)
 	deck.shuffle()
+
+func _get_card_sprite_scale():
+	# TODO: possible optimisation with preload and string constant
+	var tex = load(SPRITE_NAME_TEMPLATE % ["Clubs", 2])
+	var scale = $"../CardGrid".get_cell_size().x / tex.get_width()
+	return Vector2(scale, scale)
