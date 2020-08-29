@@ -8,16 +8,21 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "Node2D",
+"class": "CardTile",
+"language": "GDScript",
+"path": "res://core/CardTile.gd"
+} ]
 _global_script_class_icons={
-
+"CardTile": ""
 }
 
 [application]
 
 config/name="Tetris Hold'em"
-run/main_scene="res://Game.tscn"
-config/icon="res://icon.png"
+run/main_scene="res://core/Game.tscn"
+config/icon="res://core/icon.png"
 
 [display]
 
@@ -50,4 +55,4 @@ move_down={
 
 [rendering]
 
-environment/default_environment="res://default_env.tres"
+environment/default_environment="res://core/default_env.tres"
