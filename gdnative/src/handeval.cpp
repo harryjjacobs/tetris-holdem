@@ -14,18 +14,31 @@ HandEval::~HandEval() {
   // add your cleanup here
 }
 
-Dictionary HandEval::evaluate(String card1, String card2, String card3,
-                              String card4, String card5, String card6,
-                              String card7) {
-  char* cards[] = {card1.alloc_c_string(), card2.alloc_c_string(),
-                   card3.alloc_c_string(), card4.alloc_c_string(),
-                   card5.alloc_c_string(), card6.alloc_c_string(),
-                   card7.alloc_c_string()};
+void HandEval::_init() {}
 
-  auto rank = phevaluator::EvaluateCards(cards[0], cards[1], cards[2], cards[3],
-                                         cards[4], cards[5], cards[6]);
-  for (int i = 0; i < 7; i++) {
-    godot::api->godot_free(cards[i]);
+Dictionary HandEval::evaluate(Array cards) {
+  char* cards_str[7];
+
+  for (godot_int i = 0; i < cards.size(); i++) {
+    String card = cards[i];
+    cards_str[i] = card.alloc_c_string();
+  }
+
+  phevaluator::Rank rank;
+
+  if (cards.size() == 6) {
+    rank = phevaluator::EvaluateCards(cards_str[0], cards_str[1], cards_str[2],
+                                      cards_str[3], cards_str[4], cards_str[5]);
+  } else if (cards.size() == 7) {
+    rank = phevaluator::EvaluateCards(cards_str[0], cards_str[1], cards_str[2],
+                                      cards_str[3], cards_str[4], cards_str[5],
+                                      cards_str[6]);
+  } else {
+    return Dictionary();
+  }
+
+  for (godot_int i = 0; i < cards.size(); i++) {
+    godot::api->godot_free(cards_str[i]);
   }
 
   auto category = (int)rank.category();
@@ -45,9 +58,9 @@ Dictionary HandEval::evaluate(String card1, String card2, String card3,
 
 Array HandEval::hand_description_to_ranks(const std::string& desc) const {
   auto handValuesStr = String(desc.c_str())
-                           .replacen("J", 11)
-                           .replacen("Q", 12)
-                           .replacen("K", 13)
-                           .replacen("A", 14);
+                           .replacen("J", "11")
+                           .replacen("Q", "12")
+                           .replacen("K", "13")
+                           .replacen("A", "14");
   return Array(handValuesStr.split_ints(" ", false));
 }

@@ -10,6 +10,7 @@ class HandEval : public Reference {
 
  private:
   float time_passed;
+  Array hand_description_to_ranks(const std::string& desc) const;
 
  public:
   static void _register_methods();
@@ -17,9 +18,9 @@ class HandEval : public Reference {
   HandEval();
   ~HandEval();
 
-  Dictionary evaluate(String card1, String card2, String card3, String card4,
-                      String card5, String card6, String card7);
-  Array hand_description_to_ranks(const std::string& desc) const;
+  void _init();
+
+  Dictionary evaluate(Array cards);
 };
 
 extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options* o) {
