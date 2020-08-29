@@ -13,10 +13,17 @@ echo "======Building PokerHandEvaluator======"
 mkdir PokerHandEvaluator/cpp/build
 cp phe.patch PokerHandEvaluator/cpp/build/
 cd PokerHandEvaluator/cpp/build/
-patch -d.. -p2 <phe.patch
+patch -N -d.. -p2 <phe.patch
 cmake ..
 make
 
-echo "======Building libHandEval======"
 cd ../../..
+
+echo "======Building godot-cpp======"
+cd godot-cpp
+scons platform=linux generate_bindings=true -j4
+
+cd ..
+
+echo "======Building libHandEval======"
 scons platform=linux

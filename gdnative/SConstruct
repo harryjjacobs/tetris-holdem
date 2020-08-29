@@ -19,6 +19,8 @@ poker_eval_path = ARGUMENTS.get("poker_hand_eval", "PokerHandEvaluator/cpp")
 # default to debug build, must be same setting as used for cpp_bindings
 target = ARGUMENTS.get("target", "debug")
 
+target_path = 'bin/{}/libhandeval'
+
 platform_suffix = '.' + platform + '.' + target + '.' + target_arch
 
 if ARGUMENTS.get("use_llvm", "no") == "yes":
@@ -28,10 +30,11 @@ if ARGUMENTS.get("use_llvm", "no") == "yes":
 if platform == "osx":
     env.Append(CCFLAGS = ['-g','-O3', '-std=c++14', '-arch', 'x86_64'])
     env.Append(LINKFLAGS = ['-arch', 'x86_64', '-framework', 'Cocoa', '-Wl,-undefined,dynamic_lookup'])
-    platform_suffix = ''
+    target_path = target_path.format('osx')
 elif platform == "linux":
     env.Append(CCFLAGS = ['-g','-O3', '-std=c++14', '-Wno-writable-strings'])
     env.Append(LINKFLAGS = ['-Wl,-R,\'$$ORIGIN\''])
+    target_path = target_path.format('x11')
 elif platform == "windows":
     # need to add detection of msvc vs mingw, this is for msvc...
     env.Append(LINKFLAGS = ['/WX'])
@@ -39,6 +42,7 @@ elif platform == "windows":
         env.Append(CCFLAGS = ['-EHsc', '-D_DEBUG', '/MDd'])
     else:
         env.Append(CCFLAGS = ['-O2', '-EHsc', '-DNDEBUG', '/MD'])
+    target_path = target_path.format('win64')
 
 def add_sources(sources, dir):
     for f in os.listdir(dir):
@@ -55,5 +59,5 @@ env.Append(LIBPATH=[godot_bindings_path + '/bin/'] + [poker_eval_path + '/build'
 
 sources = []
 add_sources(sources, "src")
-library = env.SharedLibrary(target='bin/libHandEval', source=sources)
+library = env.SharedLibrary(target=target_path, source=sources)
 Default(library)
