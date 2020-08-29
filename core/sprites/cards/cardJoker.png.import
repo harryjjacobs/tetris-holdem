@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/cardJoker.png-04c35c312ca3cf6428d30583cd558971.stex"
+path="res://.import/cardJoker.png-3aec59c6b860178de06203378408fd15.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/cards/cardJoker.png"
-dest_files=[ "res://.import/cardJoker.png-04c35c312ca3cf6428d30583cd558971.stex" ]
+source_file="res://core/sprites/cards/cardJoker.png"
+dest_files=[ "res://.import/cardJoker.png-3aec59c6b860178de06203378408fd15.stex" ]
 
 [params]
 

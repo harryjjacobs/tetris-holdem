@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/cardDiamonds2.png-82629dfb2b3767c51a9442f00d66dac7.stex"
+path="res://.import/cardDiamonds2.png-4df4783a129cdb7a5ec865fc16bc14c3.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/cards/cardDiamonds2.png"
-dest_files=[ "res://.import/cardDiamonds2.png-82629dfb2b3767c51a9442f00d66dac7.stex" ]
+source_file="res://core/sprites/cards/cardDiamonds2.png"
+dest_files=[ "res://.import/cardDiamonds2.png-4df4783a129cdb7a5ec865fc16bc14c3.stex" ]
 
 [params]
 

@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/cardClubs2.png-5e897e0105ba854f63561da3d081fcfb.stex"
+path="res://.import/cardClubs2.png-f5657d611a6ca1c7d6d1dc9e0721bbb1.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/cards/cardClubs2.png"
-dest_files=[ "res://.import/cardClubs2.png-5e897e0105ba854f63561da3d081fcfb.stex" ]
+source_file="res://core/sprites/cards/cardClubs2.png"
+dest_files=[ "res://.import/cardClubs2.png-f5657d611a6ca1c7d6d1dc9e0721bbb1.stex" ]
 
 [params]
 

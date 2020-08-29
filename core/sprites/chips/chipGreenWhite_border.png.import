@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/chipGreenWhite_border.png-7fa2bd3983e2660bf1e4e33aa95f8e3d.stex"
+path="res://.import/chipGreenWhite_border.png-7f568192e3daae5e43c4c611baab06cf.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/chips/chipGreenWhite_border.png"
-dest_files=[ "res://.import/chipGreenWhite_border.png-7fa2bd3983e2660bf1e4e33aa95f8e3d.stex" ]
+source_file="res://core/sprites/chips/chipGreenWhite_border.png"
+dest_files=[ "res://.import/chipGreenWhite_border.png-7f568192e3daae5e43c4c611baab06cf.stex" ]
 
 [params]
 

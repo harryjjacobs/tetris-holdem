@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/cardSpades9.png-c9c81b0f3221301218104d23453b75fb.stex"
+path="res://.import/cardSpades9.png-cbbc0bef982c2dbc057b0d7cc38f1ef7.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/cards/cardSpades9.png"
-dest_files=[ "res://.import/cardSpades9.png-c9c81b0f3221301218104d23453b75fb.stex" ]
+source_file="res://core/sprites/cards/cardSpades9.png"
+dest_files=[ "res://.import/cardSpades9.png-cbbc0bef982c2dbc057b0d7cc38f1ef7.stex" ]
 
 [params]
 
