@@ -3,7 +3,7 @@
 [ext_resource path="res://core/Board.gd" type="Script" id=1]
 [ext_resource path="res://core/Community.tscn" type="PackedScene" id=2]
 [ext_resource path="res://core/Deck.tscn" type="PackedScene" id=3]
-[ext_resource path="res://core/sprites/cards/cardBack_green1.png" type="Texture" id=4]
+[ext_resource path="res://core/sprites/table/table.png" type="Texture" id=4]
 [ext_resource path="res://core/StepTimer.tscn" type="PackedScene" id=5]
 [ext_resource path="res://core/CardGrid.tscn" type="PackedScene" id=6]
 [ext_resource path="res://gdnative/bin/libhandeval.gdns" type="Script" id=7]
@@ -16,7 +16,6 @@ script = ExtResource( 1 )
 
 [node name="Background" type="Sprite" parent="."]
 position = Vector2( 507.699, 299.669 )
-scale = Vector2( 8.41446, 3.64827 )
 texture = ExtResource( 4 )
 
 [node name="DescentStepTimer" parent="." instance=ExtResource( 5 )]
@@ -27,11 +26,11 @@ script = ExtResource( 8 )
 cooldown_duration = 0.08
 
 [node name="Deck" parent="." instance=ExtResource( 3 )]
-position = Vector2( 780, 100 )
+position = Vector2( 756, 104 )
 scale = Vector2( 0.6, 0.6 )
 
 [node name="Community" parent="." instance=ExtResource( 2 )]
-position = Vector2( 780, 340 )
+position = Vector2( 756, 318 )
 
 [node name="CardGrid" parent="." instance=ExtResource( 6 )]
 position = Vector2( 20, 25.3394 )
