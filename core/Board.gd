@@ -20,7 +20,8 @@ const PokerStages = {
 }
 
 export(float) var community_deal_duration = 2.0
-export(float) var showdown_display_duration = 3.0
+export(float) var showdown_display_duration = 1.0
+export(float) var multicard_animation_delay = 0.25
 
 signal on_game_over
 
@@ -85,9 +86,19 @@ func _showdown():
 	# Wait 5 seconds, then resume execution.
 	yield(get_tree().create_timer(showdown_display_duration), "timeout")
 
+	var last_card
+	for card in winning_hand:
+		card.animate_exit()
+		yield(get_tree().create_timer(multicard_animation_delay), "timeout")
+		last_card = card
+	
+	# wait until the last card is no longer visible
+	yield(last_card, "hide")
+		
 	# return cards to deck
+	$Deck.return_cards($Community.clear_cards())
 	$Deck.return_cards($Showdown.clear_cards())
-
+	
 func _begin_descent(_card_tile):
 	_descending_card_tile = _card_tile
 	var rng = RandomNumberGenerator.new()
