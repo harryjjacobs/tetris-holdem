@@ -13,6 +13,6 @@ OSX.64="res://gdnative/bin/osx/libhandeval.dylib"
 
 [dependencies]
 
-X11.64=[]
-Windows.64=[]
-OSX.64=[]
+X11.64=[  ]
+Windows.64=[  ]
+OSX.64=[  ]

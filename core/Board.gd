@@ -20,6 +20,7 @@ const PokerStages = {
 }
 
 export(float) var community_deal_duration = 2.0
+export(float) var showdown_display_duration = 3.0
 
 signal on_game_over
 
@@ -29,7 +30,6 @@ var _poker_state = {
 	"community_cards": null
 }
 
-var _community_cards
 var _descending_card_tile
 
 func init():
@@ -38,13 +38,16 @@ func init():
 	$Deck.init()
 
 func _process(_delta):
-	if $MovementStepTimer.do_step:
+	if $MovementCooldownTimer.is_cool:
 		if Input.is_action_pressed("move_left"):
 			_move_card_left()
+			$MovementCooldownTimer.trigger()
 		elif Input.is_action_pressed("move_right"):
 			_move_card_right()
+			$MovementCooldownTimer.trigger()
 		elif Input.is_action_pressed("move_down"):
 			_move_card_down()
+			$MovementCooldownTimer.trigger()
 
 func game_loop():
 	if _is_poker_stage_finished():
@@ -70,10 +73,20 @@ func game_loop():
 			_begin_descent($Deck.get_next_card())
 
 func _showdown():
-	# TODO: showdown
-	var scoring_pairs = _find_scoring_pairs()
+	var winning_hand = _find_scoring_cards()
+	for card in winning_hand:
+		if $CardGrid.contains_card(card):
+			$CardGrid.remove_card(card)
+		else:
+			$Community.remove_card(card)
+		card.set_glow(true)
+		$Showdown.add_card(card)
 
-	$Deck.return_cards($Community.clear_cards())
+	# Wait 5 seconds, then resume execution.
+	yield(get_tree().create_timer(showdown_display_duration), "timeout")
+
+	# return cards to deck
+	$Deck.return_cards($Showdown.clear_cards())
 
 func _begin_descent(_card_tile):
 	_descending_card_tile = _card_tile
@@ -109,7 +122,6 @@ func _translate_card_tile(pos):
 	if !$CardGrid.is_cell_free(new_pos):
 			return false
 	$CardGrid.move_card(_descending_card_tile, new_pos)
-	print_debug(_descending_card_tile.position)
 	return true
 
 func _add_community_cards(poker_stage):
@@ -126,12 +138,6 @@ func _is_poker_stage_finished():
 const SUIT = preload("CardTile.gd").SUIT
 const RANK = preload("CardTile.gd").RANK
 const PokerUtils = preload("PokerUtils.gd")
-enum HandType {
-	NONE, HIGH_CARD, PAIR, TWO_PAIR,
-	THREE_OF_KIND, STRAIGHT,
-	FLUSH, FULL_HOUSE, FOUR_OF_KIND,
-	STRAIGHT_FLUSH, ROYAL_FLUSH,
-}
 
 func _find_scoring_cards():
 	# find each card and each pair made between neighbours
@@ -139,6 +145,8 @@ func _find_scoring_cards():
 	for i in range(0, $CardGrid.grid_cols):
 		for j in range(0, $CardGrid.grid_rows):
 			var card = $CardGrid.get_card_at_xy(i, j)
+			if card == null:
+				continue
 			grid_card_combos.push_back([card])
 			# make pairs from card below and card to the right
 			var below = $CardGrid.get_card_at_xy(i, j + 1)
@@ -147,41 +155,31 @@ func _find_scoring_cards():
 				grid_card_combos.push_back([card, below])
 			if right:
 				grid_card_combos.push_back([card, right])
-	var best_hands = []
-	var used_combo_cards = []
+	var best_hand
+	var best_category = PokerUtils.RANK_CATEGORY.HIGH_CARD
 	for combo in grid_card_combos:
 		var full_hand = [] + $Community.cards + combo
-		var hand = _get_best_hand_type(full_hands)
-		if hand != HandType.NONE:
-			for c in combo:
-				used_combo_cards.push_back(c)
-				hand.push_back()
+		var str_hand = card_array_to_string_array(full_hand)
+		#print("Checking combination: ", str_hand)
+		var rank = $HandEval.evaluate(str_hand)
+		#print("Category: ", PokerUtils.rank_category_friendly_name(rank.category))
+		if rank.category < best_category:	# lower is better
+			best_hand = rank
+			best_hand.original_hand = full_hand
+			best_hand.original_hand_str = str_hand
+			best_category = rank.category
+	var best_hand_cards = PokerUtils.find_cards_from_category(
+		best_hand.original_hand, best_hand.category)
+	print("Calculated best hand combination:")
+	print(best_hand.original_hand_str)
+	print(PokerUtils.rank_category_friendly_name(best_hand.category))
+	print(best_hand.hand)
+	print("Found corresponding card nodes for winning hand:", 
+		card_array_to_string_array(best_hand_cards))
+	return best_hand_cards
 
-func _get_best_hand_type(cards):
-	if cards.size() < 5:
-		return 
-	cards.sort_custom(self, "sort_cards_ascending")
-	var result = []
-	if PokerUtils.contains_royal_flush(cards, result):
-		return HandType.ROYAL_FLUSH
-	if PokerUtils.contains_straight_flush(cards, result):
-		return HandType.STRAIGHT_FLUSH
-	if PokerUtils.contains_four_of_kind(cards, result):
-		return HandType.FOUR_OF_KIND
-	if PokerUtils.contains_full_house(cards, result):
-		return HandType.FULL_HOUSE
-	if PokerUtils.contains_flush(cards, result):
-		return HandType.FLUSH
-	if PokerUtils.contains_straight(cards, result):
-		return HandType.STRAIGHT
-	if PokerUtils.contains_3_of_kind(cards, result):
-		return HandType.THREE_OF_KIND
-	if PokerUtils.contains_2_pair(cards, result):
-		return HandType.TWO_PAIR
-	if PokerUtils.contains_pair(cards, result):
-		return HandType.PAIR
-
-static func sort_cards_ascending(a, b):
-	if a.rank < b.rank:
-		return true
-	return false
+static func card_array_to_string_array(cards):
+	var str_arr = []
+	for card in cards:
+		str_arr.push_back(card.to_string().replace("10", "T"))
+	return str_arr

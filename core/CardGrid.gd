@@ -1,6 +1,8 @@
 tool
 extends Node2D
 
+const TreeUtils = preload("TreeUtils.gd")
+
 export(int) var grid_rows = 7
 export(int) var grid_cols = 4
 export(Vector2) var size
@@ -56,7 +58,26 @@ func get_card_at(tile_pos: Vector2):
 	return get_card_at_xy(pos.x, pos.y)
 
 func get_card_at_xy(x: int, y: int):
-	return _grid[_lookup(x, y)]
+	if _grid.has(_lookup(x,y)):
+		return _grid[_lookup(x, y)]
+	else:
+		return null
+
+func contains_card(card: CardTile):
+	return _grid.values().has(card)
+
+func remove_card(card: CardTile):
+	return remove_card_at(card.tile_position)
+
+func remove_card_at(tile_pos: Vector2):
+	var pos = tile_pos.floor()
+	return remove_card_at_xy(pos.x, pos.y)
+
+func remove_card_at_xy(x: int, y: int):
+	var card = _grid[_lookup(x, y)]
+	_grid.erase(_lookup(x, y))
+	TreeUtils.change_parent_preserve_global_position(card, get_tree().get_root())
+	return card
 
 func set_card_at(card: CardTile, tile_pos: Vector2):
 	var pos = tile_pos.floor()
@@ -64,18 +85,20 @@ func set_card_at(card: CardTile, tile_pos: Vector2):
 
 func set_card_at_xy(card: CardTile, x: int, y: int):
 	_grid[_lookup(x, y)] = card
+	if card.get_parent():
+		card.get_parent().remove_child(card)
 	add_child(card)
 	var pos = Vector2(x, y)
 	card.tile_position = pos
 	# TODO: tween
 	card.position = cell2pos(pos) + \
-		(card.texture.get_size() * card.scale) / 2 + \
+		(card.get_size() / 2) + \
 		Vector2(line_width / 2, line_width / 2)
 
 func move_card(card: CardTile, new_pos: Vector2):
 	var old_pos = card.tile_position.floor()
 	_grid[_lookup(old_pos.x, old_pos.y)] = null
-	remove_child(card)	# TODO: check this
+	remove_child(card)
 	set_card_at(card, new_pos)
 
 func get_cell_size():

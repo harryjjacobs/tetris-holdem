@@ -1,11 +1,14 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=10 format=2]
 
-[ext_resource path="res://Board.gd" type="Script" id=1]
-[ext_resource path="res://Community.tscn" type="PackedScene" id=2]
-[ext_resource path="res://Deck.tscn" type="PackedScene" id=3]
-[ext_resource path="res://sprites/cards/cardBack_green1.png" type="Texture" id=4]
-[ext_resource path="res://StepTimer.tscn" type="PackedScene" id=5]
-[ext_resource path="res://CardGrid.tscn" type="PackedScene" id=6]
+[ext_resource path="res://core/Board.gd" type="Script" id=1]
+[ext_resource path="res://core/Community.tscn" type="PackedScene" id=2]
+[ext_resource path="res://core/Deck.tscn" type="PackedScene" id=3]
+[ext_resource path="res://core/sprites/cards/cardBack_green1.png" type="Texture" id=4]
+[ext_resource path="res://core/StepTimer.tscn" type="PackedScene" id=5]
+[ext_resource path="res://core/CardGrid.tscn" type="PackedScene" id=6]
+[ext_resource path="res://gdnative/bin/libhandeval.gdns" type="Script" id=7]
+[ext_resource path="res://core/CooldownTimer.gd" type="Script" id=8]
+[ext_resource path="res://core/Showdown.tscn" type="PackedScene" id=9]
 
 [node name="Board" type="Node2D"]
 script = ExtResource( 1 )
@@ -16,10 +19,11 @@ scale = Vector2( 8.41446, 3.64827 )
 texture = ExtResource( 4 )
 
 [node name="DescentStepTimer" parent="." instance=ExtResource( 5 )]
-step_duration = 1.0
+step_duration = 0.75
 
-[node name="MovementStepTimer" parent="." instance=ExtResource( 5 )]
-step_duration = 0.07
+[node name="MovementCooldownTimer" parent="." instance=ExtResource( 5 )]
+script = ExtResource( 8 )
+cooldown_duration = 0.08
 
 [node name="Deck" parent="." instance=ExtResource( 3 )]
 position = Vector2( 780, 100 )
@@ -30,6 +34,9 @@ position = Vector2( 780, 340 )
 
 [node name="CardGrid" parent="." instance=ExtResource( 6 )]
 position = Vector2( 20, 25.3394 )
-size = Vector2( 480, 540 )
-line_color = Color( 0.968627, 0.823529, 0.984314, 1 )
-line_width = 5.0
+size = Vector2( 475, 530 )
+
+[node name="Showdown" parent="." instance=ExtResource( 9 )]
+
+[node name="HandEval" type="Node" parent="."]
+script = ExtResource( 7 )

@@ -1,7 +1,10 @@
 [gd_scene load_steps=3 format=2]
 
-[ext_resource path="res://Community.gd" type="Script" id=1]
-[ext_resource path="res://sprites/table/community_border.png" type="Texture" id=2]
+[ext_resource path="res://core/LinearCardLayout.gd" type="Script" id=1]
+[ext_resource path="res://core/sprites/table/community_border.png" type="Texture" id=2]
+
+
+
 
 [node name="Community" type="Node2D"]
 script = ExtResource( 1 )

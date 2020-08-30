@@ -1,4 +1,4 @@
-extends Sprite
+extends Node2D
 class_name CardTile
 
 const SUIT = {
@@ -18,15 +18,35 @@ const RANK = {
 	14: "A" 
 }
 
+export(float) var tween_duration = 0.7
+
 var suit = "CLUBS"
 var rank = 2
 var tile_position: Vector2
 
-func init(_suit, _rank, sprite):
+func init(_suit, _rank, _texture, _sprite_scale = Vector2.ZERO):
 	suit = _suit;
 	rank = _rank;
-	texture = sprite
+	$CardSprite.texture = _texture
+	$CardSprite.scale = _sprite_scale
+	set_glow(false)
+
+func set_glow(state):
+	$CardSprite/Glow.visible = state
+
+func tween_to_position(target_pos: Vector2):
+	$CardSprite.position -= target_pos - position
+	position = target_pos
+	$Tween.interpolate_property($CardSprite, "position", $CardSprite.position,
+		Vector2.ZERO, tween_duration, Tween.TRANS_BACK, Tween.EASE_IN_OUT)
+	$Tween.start()
+
+func get_size():
+	return $CardSprite.texture.get_size() * $CardSprite.scale
 
 func equals(card):
 	return suit == card.suit && \
 		   rank == card.rank
+
+func to_string():
+	return RANK[rank] + SUIT[suit][0]
