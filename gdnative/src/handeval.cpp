@@ -58,6 +58,7 @@ Dictionary HandEval::evaluate(Array cards) {
 
 Array HandEval::hand_description_to_ranks(const std::string& desc) const {
   auto handValuesStr = String(desc.c_str())
+                           .replacen("T", "10")
                            .replacen("J", "11")
                            .replacen("Q", "12")
                            .replacen("K", "13")
