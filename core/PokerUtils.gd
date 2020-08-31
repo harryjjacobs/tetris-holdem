@@ -83,7 +83,7 @@ static func _find_highest_three_of_kind(cards):
 
 static func _find_highest_straight(cards):
 	for i in range(4, cards.size()):
-		if (cards[i].rank - cards[i - 4].rank) == 4:
+		if (cards[i - 4].rank - cards[i].rank) == 4:
 			return [cards[i - 4], cards[i - 3], 
 					cards[i - 2], cards[i - 1], 
 					cards[i]]
