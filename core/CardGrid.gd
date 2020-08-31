@@ -39,9 +39,11 @@ func cell2pos(position: Vector2):
 
 func clear_cards():
 	var cards = []
-	for pos in _grid:
-		cards.push_back(_grid[pos])
-		_grid = {}
+	var to_remove = [] + _grid.values()
+	for card in to_remove:
+		cards.push_back(card)
+		remove_card(card)
+	_grid = {}
 	return cards
 
 func is_cell_free(cell_pos: Vector2):

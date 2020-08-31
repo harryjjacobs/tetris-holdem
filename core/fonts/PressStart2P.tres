@@ -4,7 +4,7 @@
 font_path = "res://core/fonts/PressStart2P-Regular.ttf"
 
 [resource]
-size = 38
+size = 46
 outline_size = 3
 outline_color = Color( 0, 0, 0, 1 )
 font_data = SubResource( 1 )

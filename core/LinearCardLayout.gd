@@ -8,7 +8,8 @@ var cards = []
 
 func clear_cards():
 	var cleared = []
-	for card in cards:
+	var to_remove = [] + cards
+	for card in to_remove:
 		remove_card(card)
 		cleared.push_back(card)
 	cards = []

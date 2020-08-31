@@ -39,6 +39,11 @@ func get_next_card():
 
 func return_cards(cards):
 	for card in cards:
+		if card.get_parent():
+			card.get_parent().remove_child(card)
+		add_child(card)
+		card.visible = false
+		card.position = Vector2.ZERO
 		deck.push_back(card)
 	assert(deck.size() <= 52)
 	deck.shuffle()
