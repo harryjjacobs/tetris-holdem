@@ -1,7 +1,16 @@
 # tetris holdem
 
-Tetris blocks are cards.
+What it sounds like pretty much
 
-Play out texas hold'em hand to the side.
+## Development Setup
 
-Player must move cards next to each other and then at the end of the round do a showdown like in poker and remove cards that make a hand, and award points for hand ranking.
+Requirements:
+- Godot 3.2+
+- SConstruct for gdnative build
+
+Setup:
+
+`git clone --recurse-submodules -j8 https://github.com/harryjjacobs/tetris-holdem.git`
+
+There is currently no gdnative build for windows. TODO: a build.bat similar to build.sh in gdnative directory needs to be created
+for windows platform support.
