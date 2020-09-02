@@ -99,12 +99,40 @@ func set_card_at_xy(card: CardTile, x: int, y: int):
 
 func move_card(card: CardTile, new_pos: Vector2):
 	var old_pos = card.tile_position.floor()
-	_grid[_lookup(old_pos.x, old_pos.y)] = null
+	_grid.erase(_lookup(old_pos.x, old_pos.y))
 	remove_child(card)
 	set_card_at(card, new_pos)
 
 func get_cell_size():
 	return Vector2(size.x / grid_cols, size.y / grid_rows)
 
+func sink_cards_to_bottom():
+	var sorted_cards = [] + _grid.values()
+	# sort so bottom-most cards are first. sink down from the bottom up
+	sorted_cards.sort_custom(CardTileSorter, "sort_cards_by_row_descending")
+	print("sink")
+	for card in sorted_cards:
+		print(card)
+		var lowest = false
+		while !lowest:
+			var pos_below = Vector2(card.tile_position.x, card.tile_position.y + 1)
+			var below = get_card_at(pos_below)
+			if below || pos_below.y >= grid_rows:
+				lowest = true
+			else:
+				move_card(card, pos_below)
+
 func _lookup(x: int, y: int):
 	return "%d,%d" % [x, y]
+
+
+class CardTileSorter:
+	static func sort_cards_by_row_descending(a, b):
+		if a.tile_position.y > b.tile_position.y:
+			return true
+		return false
+
+	static func sort_cards_by_row_ascending(a, b):
+		if a.tile_position.y < b.tile_position.y:
+			return true
+		return false

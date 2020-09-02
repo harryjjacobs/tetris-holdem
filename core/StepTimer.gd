@@ -44,3 +44,6 @@ func pause(duration = -1.0):
 	
 func resume():
 	_paused = false
+
+func is_paused():
+	return _paused;

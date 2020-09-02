@@ -28,6 +28,7 @@ export(float) var showdown_display_duration = 2.0
 export(float) var multicard_animation_delay = 0.05
 
 signal on_game_over
+signal on_showdown_ended
 
 var _poker_state = {
 	"stage": PokerStages.PREFLOP,
@@ -35,7 +36,10 @@ var _poker_state = {
 	"community_cards": null
 }
 
-var _descending_card_tile
+var _game_state = {
+	"descending_card_tile": null,
+	"executing_showdown": false
+}
 
 func init():
 	_poker_state.stage = PokerStages.PREFLOP
@@ -55,7 +59,10 @@ func _process(_delta):
 			$MovementCooldownTimer.trigger()
 
 func game_loop():
+	if _game_state.executing_showdown:
+		return
 	if _is_poker_stage_finished():
+		_poker_state.descent_count = 0
 		match _poker_state.stage:
 			PokerStages.PREFLOP:
 				_poker_state.stage = PokerStages.FLOP
@@ -69,19 +76,20 @@ func game_loop():
 			PokerStages.RIVER:
 				_poker_state.stage = PokerStages.PREFLOP
 				_showdown()
-		_poker_state.descent_count = 0
-		$DescentStepTimer.pause(community_deal_duration)
 	if $DescentStepTimer.do_step:
-		if _descending_card_tile:
+		if _game_state.descending_card_tile:
 			_move_card_down()
 		else:
 			_begin_descent($Deck.get_next_card())
 
 func _showdown():
+	_game_state.executing_showdown = true
 	var winning_hand = _find_scoring_cards()
+	var empty_grid_spaces = []
 	for card in winning_hand.hand:
 		if $CardGrid.contains_card(card):
 			$CardGrid.remove_card(card)
+			empty_grid_spaces.push_back(card.tile_position)
 		else:
 			$Community.remove_card(card)
 		card.set_glow(true)
@@ -89,9 +97,10 @@ func _showdown():
 
 	$Showdown/ShowdownTitle.show_category(winning_hand.category)
 
-	# Wait x seconds, then resume execution
+	# wait x seconds, then resume execution
 	yield(get_tree().create_timer(showdown_display_duration), "timeout")
 
+	# hide cards from showdown
 	var last_card
 	for card in winning_hand.hand:
 		card.animate_exit()
@@ -102,30 +111,39 @@ func _showdown():
 	# wait until the last card is no longer visible
 	yield(last_card, "hide")
 	
-	#for card in $Community.cards:
-	#	card.animate_exit()
+	for card in $Community.cards:
+		card.animate_exit()
+		last_card = card
+
+	# wait until the last card is no longer visible
+	yield(last_card, "hide")
 
 	# return cards to deck
 	$Deck.return_cards($Community.clear_cards())
 	$Deck.return_cards($Showdown.clear_cards())
+
+	# sink cards in cardgrid down to close gaps
+	$CardGrid.sink_cards_to_bottom()
+
+	_game_state.executing_showdown = false
 	
 func _begin_descent(_card_tile):
-	_descending_card_tile = _card_tile
+	_game_state.descending_card_tile = _card_tile
 	var rng = RandomNumberGenerator.new()
 	rng.randomize()
 	var start_pos = Vector2(rng.randi_range(0, $CardGrid.grid_cols - 1), 0)
 	if !$CardGrid.is_cell_free(start_pos):
 		emit_signal("on_game_over")
 	else:
-		$CardGrid.set_card_at(_descending_card_tile, start_pos)
+		$CardGrid.set_card_at(_game_state.descending_card_tile, start_pos)
 
 func _end_descent():
-	$CardGrid.set_card_at(_descending_card_tile, _descending_card_tile.tile_position)
-	_descending_card_tile = null
+	$CardGrid.set_card_at(_game_state.descending_card_tile, _game_state.descending_card_tile.tile_position)
+	_game_state.descending_card_tile = null
 	_poker_state.descent_count += 1
 
 func _move_card_down():
-	if _descending_card_tile == null:
+	if _game_state.descending_card_tile == null:
 		return
 	if !_translate_card_tile(Vector2(0, 1)):
 		_end_descent()
@@ -137,17 +155,18 @@ func _move_card_right():
 	_translate_card_tile(Vector2(1, 0))
 
 func _translate_card_tile(pos):
-	if _descending_card_tile == null:
+	if _game_state.descending_card_tile == null:
 		return false
-	var new_pos = _descending_card_tile.tile_position + pos
+	var new_pos = _game_state.descending_card_tile.tile_position + pos
 	if !$CardGrid.is_cell_free(new_pos):
 			return false
-	$CardGrid.move_card(_descending_card_tile, new_pos)
+	$CardGrid.move_card(_game_state.descending_card_tile, new_pos)
 	return true
 
 func _add_community_cards(poker_stage):
 	for _i in range(0, poker_stage.COMMUNITY):
 		$Community.add_card($Deck.get_next_card())
+	$DescentStepTimer.pause(community_deal_duration)
 
 func _clear_community_cards():
 	var cleared = $Community.clear_cards()
