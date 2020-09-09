@@ -13,9 +13,15 @@ _global_script_classes=[ {
 "class": "CardTile",
 "language": "GDScript",
 "path": "res://core/CardTile.gd"
+}, {
+"base": "Reference",
+"class": "PokerEvalUtils",
+"language": "GDScript",
+"path": "res://core/pokereval/PokerEvalUtils.gd"
 } ]
 _global_script_class_icons={
-"CardTile": ""
+"CardTile": "",
+"PokerEvalUtils": ""
 }
 
 [application]

@@ -1,8 +1,0 @@
-[submodule "gdnative/godot-cpp"]
-	path = gdnative/godot-cpp
-	url = https://github.com/GodotNativeTools/godot-cpp
-	ignore = dirty
-[submodule "gdnative/PokerHandEvaluator"]
-	path = gdnative/PokerHandEvaluator
-	url = https://github.com/HenryRLee/PokerHandEvaluator
-	ignore = dirty
