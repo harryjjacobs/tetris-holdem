@@ -1,10 +1,8 @@
 extends Node2D
 
+const CARD_TILE = preload("CardTile.tscn");
 const SUIT = preload("CardTile.gd").SUIT
 const RANK = preload("CardTile.gd").RANK
-
-const CARD_TILE = preload("res://core/CardTile.tscn");
-const SPRITE_NAME_TEMPLATE = "res://core/sprites/cards/card%s%s.png"
 
 onready var card_grid = $"../CardGrid"
 
@@ -18,12 +16,11 @@ func init():
 	for card in deck:
 		card.queue_free();
 	deck = [];
-	var sprite_scale = _get_card_sprite_scale()
+	var card_width = _get_max_card_width()
 	for suit in SUIT:
 		for rank in RANK:
 			var card = CARD_TILE.instance()
-			var sprite_name = SPRITE_NAME_TEMPLATE % [SUIT[suit], RANK[rank]]
-			card.init(suit, rank, load(sprite_name), sprite_scale)
+			card.init(suit, rank, card_width)
 			card.visible = false
 			add_child(card)
 			deck.push_back(card)
@@ -48,8 +45,5 @@ func return_cards(cards):
 	assert(deck.size() <= 52)
 	deck.shuffle()
 
-func _get_card_sprite_scale():
-	# TODO: possible optimisation with preload and string constant
-	var tex = load(SPRITE_NAME_TEMPLATE % ["Clubs", 2])
-	var scale = card_grid.get_cell_size().x / tex.get_width()
-	return Vector2(scale, scale)
+func _get_max_card_width():
+	return card_grid.get_cell_size().x

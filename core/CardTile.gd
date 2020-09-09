@@ -1,35 +1,104 @@
 extends Node2D
 class_name CardTile
 
-const SUIT = {
-	"CLUBS": "Clubs",
-	"DIAMONDS": "Diamonds",
-	"HEARTS": "Hearts",
-	"SPADES": "Spades"
+enum RANK {
+	TWO = 0,
+	THREE = 1,
+	FOUR = 2,
+	FIVE = 3,
+	SIX = 4,
+	SEVEN = 5,
+	EIGHT = 6,
+	NINE = 7,
+	TEN = 8,
+	JACK = 9,
+	QUEEN = 10,
+	KING = 11,
+	ACE = 12
 }
 
-const RANK = { 
-	2: "2", 3: "3",
-	4: "4", 5: "5",
-	6: "6", 7: "7",
-	8: "8", 9: "9",
-	10: "10", 11: "J",
-	12: "Q", 13: "K",
-	14: "A" 
+enum SUIT {
+	SPADES = 1,
+	HEARTS = 2,
+	DIAMONDS = 3,
+	CLUBS = 4
 }
 
+const SUIT_TO_STRING = {
+	SUIT.CLUBS: "c",
+	SUIT.DIAMONDS: "d",
+	SUIT.HEARTS: "h",
+	SUIT.SPADES: "s"
+}
+
+const RANK_TO_STRING = { 
+	RANK.TWO: "2",
+	RANK.THREE: "3",
+	RANK.FOUR: "4",
+	RANK.FIVE: "5",
+	RANK.SIX: "6",
+	RANK.SEVEN: "7",
+	RANK.EIGHT: "8",
+	RANK.NINE: "9",
+	RANK.TEN: "T",
+	RANK.JACK: "J",
+	RANK.QUEEN: "Q",
+	RANK.KING: "K",
+	RANK.ACE: "A" 
+}
+
+const STRING_TO_RANK = { 
+	'2': RANK.TWO,
+	'3': RANK.THREE,
+	'4': RANK.FOUR,
+	'5': RANK.FIVE,
+	'6': RANK.SIX,
+	'7': RANK.SEVEN,
+	'8': RANK.EIGHT,
+	'9': RANK.NINE,
+	'10': RANK.TEN,
+	'T': RANK.TEN,
+	't': RANK.TEN,
+	'J': RANK.JACK,
+	'j': RANK.JACK,
+	'Q': RANK.QUEEN,
+	'q': RANK.QUEEN,
+	'K': RANK.KING,
+	'k': RANK.KING,
+	'A': RANK.ACE,
+	'a': RANK.ACE
+}
+
+const STRING_TO_SUIT = {
+	's' : SUIT.SPADES, # spades
+	'S' : SUIT.SPADES, # spades
+	'h' : SUIT.HEARTS, # hearts
+	'H' : SUIT.HEARTS, # hearts
+	'd' : SUIT.DIAMONDS, # diamonds
+	'D' : SUIT.DIAMONDS, # diamonds
+	'c' : SUIT.CLUBS, # clubs
+	'C' : SUIT.CLUBS, # clubs
+}
+
+export(String) var card_sprite_directory = "res://core/sprites/cards"
 export(float) var tween_duration_position = 0.7
 export(float) var tween_duration_exit = 0.5
 
-var suit = "CLUBS"
-var rank = 2
+var SPRITE_NAME_TEMPLATE = card_sprite_directory + "/card%s%s.png"
+
+var suit = SUIT.CLUBS
+var rank = RANK.TWO
 var tile_position: Vector2
 
-func init(_suit, _rank, _texture, _sprite_scale = Vector2.ZERO):
+func init(_suit, _rank, _max_sprite_width = 10):
 	suit = _suit;
 	rank = _rank;
-	$CardSprite.texture = _texture
-	$CardSprite.scale = _sprite_scale
+	print(RANK[rank])
+	print(RANK_TO_STRING[RANK[rank]])
+	$CardSprite.texture = load(SPRITE_NAME_TEMPLATE %
+		[RANK_TO_STRING[RANK[rank]], SUIT_TO_STRING[SUIT[suit]].to_upper()])
+	var scale = _max_sprite_width / $CardSprite.texture.get_width()
+	$CardSprite.scale = Vector2(scale, scale)
 	set_glow(false)
 
 func set_glow(state):
@@ -43,7 +112,6 @@ func tween_to_position(target_pos: Vector2):
 	$Tween.start()
 
 func animate_exit():
-	print("EXIT ANIM")
 	var orig_tf = $CardSprite.transform
 	$Tween.interpolate_property($CardSprite, "scale", $CardSprite.scale, Vector2.ZERO,
 		tween_duration_exit)
@@ -61,7 +129,7 @@ func equals(card):
 		   rank == card.rank
 
 func to_string():
-	return RANK[rank] + SUIT[suit][0]
+	return RANK_TO_STRING[RANK[rank]] + SUIT_TO_STRING[SUIT[suit]]
 
 func _reset_sprite_after_exit_tween(tf):
 	visible = false

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://core/Board.gd" type="Script" id=1]
 [ext_resource path="res://core/Community.tscn" type="PackedScene" id=2]
@@ -6,7 +6,6 @@
 [ext_resource path="res://core/sprites/table/table.png" type="Texture" id=4]
 [ext_resource path="res://core/StepTimer.tscn" type="PackedScene" id=5]
 [ext_resource path="res://core/CardGrid.tscn" type="PackedScene" id=6]
-[ext_resource path="res://gdnative/bin/libhandeval.gdns" type="Script" id=7]
 [ext_resource path="res://core/CooldownTimer.gd" type="Script" id=8]
 [ext_resource path="res://core/Showdown.tscn" type="PackedScene" id=9]
 [ext_resource path="res://core/ShowdownTitle.tscn" type="PackedScene" id=10]
@@ -41,9 +40,6 @@ size = Vector2( 475, 530 )
 
 [node name="ShowdownTitle" parent="Showdown" instance=ExtResource( 10 )]
 position = Vector2( -3.66345, -124.677 )
-
-[node name="HandEval" type="Node" parent="."]
-script = ExtResource( 7 )
 
 [node name="Game Title" type="Label" parent="."]
 margin_left = 535.0

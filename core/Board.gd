@@ -1,8 +1,8 @@
 extends Node2D
 
-const SUIT = preload("CardTile.gd").SUIT
-const RANK = preload("CardTile.gd").RANK
-const PokerUtils = preload("PokerUtils.gd")
+const CardTile = preload("./CardTile.gd")
+const PokerUtils = preload("./PokerUtils.gd")
+const PokerEvalEvaluator = preload("pokereval/PokerEvalEvaluator.gd")
 
 const PokerStages = { 
 	"PREFLOP": {
@@ -28,7 +28,6 @@ export(float) var showdown_display_duration = 2.0
 export(float) var multicard_animation_delay = 0.05
 
 signal on_game_over
-signal on_showdown_ended
 
 var _poker_state = {
 	"stage": PokerStages.PREFLOP,
@@ -41,7 +40,10 @@ var _game_state = {
 	"executing_showdown": false
 }
 
+var evaluator
+
 func init():
+	evaluator = PokerEvalEvaluator.new()
 	_poker_state.stage = PokerStages.PREFLOP
 	print_debug(_poker_state)
 	$Deck.init()
@@ -86,7 +88,7 @@ func _showdown():
 	_game_state.executing_showdown = true
 	var winning_hand = _find_scoring_cards()
 	var empty_grid_spaces = []
-	for card in winning_hand.hand:
+	for card in winning_hand.cards:
 		if $CardGrid.contains_card(card):
 			$CardGrid.remove_card(card)
 			empty_grid_spaces.push_back(card.tile_position)
@@ -102,14 +104,11 @@ func _showdown():
 
 	# hide cards from showdown
 	var last_card
-	for card in winning_hand.hand:
+	for card in winning_hand.cards:
 		card.animate_exit()
-		yield(get_tree().create_timer(multicard_animation_delay), "timeout")
 		card.set_glow(false)
 		last_card = card
-	
-	# wait until the last card is no longer visible
-	yield(last_card, "hide")
+		yield(get_tree().create_timer(multicard_animation_delay), "timeout")
 	
 	for card in $Community.cards:
 		card.animate_exit()
@@ -124,7 +123,7 @@ func _showdown():
 
 	# sink cards in cardgrid down to close gaps
 	$CardGrid.sink_cards_to_bottom()
-
+	
 	_game_state.executing_showdown = false
 	
 func _begin_descent(_card_tile):
@@ -176,6 +175,34 @@ func _is_poker_stage_finished():
 	return _poker_state.descent_count >= _poker_state.stage.DESCEND
 
 func _find_scoring_cards():
+	var grid_card_combos = _generate_grid_combos()
+	var best_hand = { "category": PokerUtils.RANK_CATEGORY.HIGH_CARD }
+	for combo in grid_card_combos:
+		var full_hand = [] + $Community.cards + combo
+		var str_hand = card_array_to_string_array(full_hand)
+		print("Checking combination: ", str_hand)
+		var result = evaluator.evaluate(
+			PokerUtils.str_cards_to_pokereval_cards(str_hand))
+		#print("Category: ", PokerUtils.rank_category_friendly_name(result.category))
+		if result.category == PokerUtils.RANK_CATEGORY.HIGH_CARD || \
+			result.category < best_hand.category:	# lower is better
+			best_hand.card_strs = result.cards
+			best_hand.category = result.category
+			best_hand.original_hand = full_hand
+			best_hand.original_hand_str = str_hand
+			best_hand.cards = []
+			for card_str in best_hand.card_strs:
+				best_hand.cards.push_back(PokerUtils.find_card_by_string(
+					full_hand, card_str))
+	print("Calculated best hand combination:")
+	print(best_hand.original_hand_str)
+	print(PokerUtils.rank_category_friendly_name(best_hand.category))
+	print(best_hand.cards)
+	print("Found corresponding card nodes for winning hand:", 
+		card_array_to_string_array(best_hand.cards))
+	return best_hand
+
+func _generate_grid_combos():
 	# find each card and each pair made between neighbours
 	var grid_card_combos = []
 	for i in range(0, $CardGrid.grid_cols):
@@ -191,29 +218,8 @@ func _find_scoring_cards():
 				grid_card_combos.push_back([card, below])
 			if right:
 				grid_card_combos.push_back([card, right])
-	var best_hand
-	var best_category = PokerUtils.RANK_CATEGORY.HIGH_CARD
-	for combo in grid_card_combos:
-		var full_hand = [] + $Community.cards + combo
-		var str_hand = card_array_to_string_array(full_hand)
-		#print("Checking combination: ", str_hand)
-		var rank = $HandEval.evaluate(str_hand)
-		#print("Category: ", PokerUtils.rank_category_friendly_name(rank.category))
-		if rank.category < best_category:	# lower is better
-			best_hand = rank	# rank consists of category and card ranks
-			best_hand.original_hand = full_hand
-			best_hand.original_hand_str = str_hand
-			best_category = rank.category
-	var best_hand_cards = PokerUtils.find_cards_from_category(
-		best_hand.original_hand, best_hand.category)
-	print("Calculated best hand combination:")
-	print(best_hand.original_hand_str)
-	print(PokerUtils.rank_category_friendly_name(best_hand.category))
-	print(best_hand.hand)
-	print("Found corresponding card nodes for winning hand:", 
-		card_array_to_string_array(best_hand_cards))
-	return {"hand": best_hand_cards, "category": best_hand.category}
-
+	return grid_card_combos
+	
 static func card_array_to_string_array(cards):
 	var str_arr = []
 	for card in cards:

@@ -1,0 +1,1 @@
+This pokereval 'library' is basically a gdscript port of https://github.com/worldveil/deuces which is a poker hand evaluation library written purely in python.
