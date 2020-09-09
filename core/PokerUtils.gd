@@ -1,6 +1,9 @@
 # Helper functions for poker
 # Functions assume cards are sorted in ascending order
 
+const PokerEvalCard = preload("./pokereval/PokerEvalCard.gd")
+const PokerEvalLookupTable = preload("./pokereval/PokerEvalLookupTable.gd")
+
 enum RANK_CATEGORY {
 	ROYAL_FLUSH = 0,
 	STRAIGHT_FLUSH = 1,
@@ -29,6 +32,36 @@ const RANK_CATEGORY_FRIENDLY_NAME = {
 
 static func rank_category_friendly_name(category):
 	return RANK_CATEGORY_FRIENDLY_NAME[category]
+
+# converts an array of pokereval int representation cards
+# from an array of string representation cards
+static func str_cards_to_pokereval_cards(str_cards: Array):
+	var cards = []
+	for str_card in str_cards:
+		cards.push_back(PokerEvalCard.from_string(str_card))
+	return cards
+
+# find card in array of cards by string representation
+static func find_card_by_string(cards, card_str):
+	for card in cards:
+		if card.to_string().replace("10", "T").to_lower() == card_str.to_lower():
+			return card
+	print("FAILED TO FIND CARD: ", card_str)
+	for card in cards:
+		print(card.to_string())
+
+static func write_tables_to_userdata():
+	var table = PokerEvalLookupTable.new()
+	var file = File.new()
+	file.open("user://unsuited_lookup.csv", File.WRITE)
+	for key in table.unsuited_lookup:
+		file.store_csv_line([str(key), str(table.unsuited_lookup[key])])
+	file.close()
+	file.open("user://flush_lookup.csv", File.WRITE)
+	for key in table.flush_lookup:
+		file.store_csv_line([str(key), str(table.flush_lookup[key])])
+	file.close()
+	print("Table lookup files written to user data")
 
 # The HandEval library returns the rank category, use this
 # to identify which card nodes represent the winning cards

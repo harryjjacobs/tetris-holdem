@@ -44,6 +44,7 @@ const MAX_TO_RANK_CLASS = {
 }
 
 const RANK_CLASS_TO_STRING = {
+	0 : "Royal Flush",
 	1 : "Straight Flush",
 	2 : "Four of a Kind",
 	3 : "Full House",
@@ -140,7 +141,6 @@ func straight_and_highcards(straights, highcards):
 	Reuses bit sequences from flush calculations.
 	"""
 	var rank = MAX_FLUSH + 1
-
 	for s in straights:
 		var prime_product = PokerEvalCard.prime_product_from_rankbits(s)
 		unsuited_lookup[prime_product] = rank
@@ -194,7 +194,7 @@ func multiples():
 	for r in backwards_ranks:
 		var kickers = [] + backwards_ranks
 		kickers.remove(kickers.find(r))
-		var gen = PokerEvalEvaluator.combinations(kickers, 2)
+		var gen = PokerEvalEvaluator._combinations(kickers, 2)
 		for kckrs in gen:
 			var c1 = kckrs[0]
 			var c2 = kckrs[1]
@@ -205,7 +205,7 @@ func multiples():
 	# 4) Two Pair
 	rank = MAX_THREE_OF_A_KIND + 1
 
-	var tpgen = PokerEvalEvaluator.combinations(backwards_ranks, 2)
+	var tpgen = PokerEvalEvaluator._combinations(backwards_ranks, 2)
 	for tp in tpgen:
 		var pair1 = tp[0]
 		var pair2 = tp[1]
@@ -226,7 +226,7 @@ func multiples():
 	for pairrank in backwards_ranks:
 		var kickers = [] + backwards_ranks
 		kickers.remove(kickers.find(pairrank))
-		var kgen = PokerEvalEvaluator.combinations(kickers, 3)
+		var kgen = PokerEvalEvaluator._combinations(kickers, 3)
 		for kckrs in kgen:
 			var k1 = kckrs[0]
 			var k2 = kckrs[1]

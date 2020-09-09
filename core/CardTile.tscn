@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://core/CardTile.gd" type="Script" id=1]
-[ext_resource path="res://core/sprites/cards/cardClubs2.png" type="Texture" id=2]
+[ext_resource path="res://core/sprites/cards/card2C.png" type="Texture" id=2]
 [ext_resource path="res://core/sprites/cards/cardGlow_green.png" type="Texture" id=3]
 
 [node name="CardTile" type="Node2D"]

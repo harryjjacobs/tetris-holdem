@@ -7,19 +7,36 @@ http://suffe.cool/poker/evaluator.html
 
 const PokerEvalCard = preload("res://core/pokereval/PokerEvalCard.gd")
 const PokerEvalLookupTable = preload("res://core/pokereval/PokerEvalLookupTable.gd")
+var TENS = [
+	PokerEvalCard.from_string("Tc"),
+	PokerEvalCard.from_string("Td"),
+	PokerEvalCard.from_string("Th"),
+	PokerEvalCard.from_string("Ts")
+]
 
 var table = {}
-var hand_size_map = {
-	5 : funcref(self, "_evaluate_five"),
-	6 : funcref(self, "_evaluate_six"),
-	7 : funcref(self, "_evaluate_seven")
-}
 
 func _init():
 	table = PokerEvalLookupTable.new()
 
 func evaluate(cards):
-	return hand_size_map[cards.size()].call_func(cards)
+	var evaluation
+	match cards.size():
+		5: evaluation = _evaluate_five(cards)
+		_: evaluation = _evaluate_many(cards)
+
+	evaluation.cards.sort()	# ascending
+
+	var result = { "cards": [] }
+	result.category = get_rank_class(evaluation.score)
+	for card_int in evaluation.cards:
+		result.cards.push_back(PokerEvalCard.to_str(card_int))
+
+	if result.category == PokerEvalLookupTable.\
+		MAX_TO_RANK_CLASS[PokerEvalLookupTable.MAX_STRAIGHT_FLUSH]:
+		if result.cards[0] in TENS:	# lowest card in straight card has value of 10
+			result.category = 0  # royal straight flush
+	return result
 
 func _evaluate_five(cards):
 	"""
@@ -28,48 +45,39 @@ func _evaluate_five(cards):
 	Variant of Cactus Kev's 5 card evaluator, though I saved a lot of memory
 	space using a hash table and condensing some of the calculations. 
 	"""
+	var result = {
+		"cards": cards
+	}
 	# if flush
 	if cards[0] & cards[1] & cards[2] & cards[3] & cards[4] & 0xF000:
 		var handOR = (cards[0] | cards[1] | cards[2] | cards[3] | cards[4]) >> 16
 		var prime = PokerEvalCard.prime_product_from_rankbits(handOR)
-		return table.flush_lookup[prime]
-
+		result.score = table.flush_lookup[prime]
 	# otherwise
 	else:
 		var prime = PokerEvalCard.prime_product_from_hand(cards)
-		return table.unsuited_lookup[prime]
+		# for some reason dictionary lookup is broken so I have to
+		# do it like this. TODO: submit a bug report to godot
+		var idx = table.unsuited_lookup.keys().find(prime)
+		result.score = table.unsuited_lookup.values()[idx]
 
-func _evaluate_six(cards):
+	return result
+
+func _evaluate_many(cards):
 	"""
-	Performs five_card_eval() on all (6 choose 5) = 6 subsets
-	of 5 cards in the set of 6 to determine the best ranking, 
+	Performs five_card_eval() on all subsets of 5 cards
+	in the specified set to determine the best ranking, 
 	and returns this ranking.
 	"""
 	var minimum = PokerEvalLookupTable.MAX_HIGH_CARD
-
-	var all5cardcombobs = combinations(cards, 5)
-	for combo in all5cardcombobs:
-		var score = _evaluate_five(combo)
-		if score < minimum:
-			minimum = score
-
-	return minimum
-
-func _evaluate_seven(cards):
-	"""
-	Performs five_card_eval() on all (7 choose 5) = 21 subsets
-	of 5 cards in the set of 7 to determine the best ranking, 
-	and returns this ranking.
-	"""
-	var minimum = PokerEvalLookupTable.MAX_HIGH_CARD
-
-	var all5cardcombobs = combinations(cards, 5)
-	for combo in all5cardcombobs:
-		var score = self._evaluate_five(combo)
-		if score < minimum:
-			minimum = score
-
-	return minimum
+	var result
+	var all5cardcombos = _combinations(cards, 5)
+	for combo in all5cardcombos:
+		var _result = self._evaluate_five(combo)
+		if _result.score < minimum:
+			minimum = _result.score
+			result = _result
+	return result
 
 func get_rank_class(hr):
 	"""
@@ -97,7 +105,7 @@ func get_rank_class(hr):
 	else:
 		printerr("Invalid hand rank, cannot return rank class.")
 
-static func combinations(s, m):
+static func _combinations(s, m):
 	if m == 1:
 		var res = []
 		for a in s:
@@ -106,6 +114,6 @@ static func combinations(s, m):
 	if m == s.size():
 		return [s]
 	var res = []
-	for a in combinations(s.slice(1, s.size() - 1), m - 1):
+	for a in _combinations(s.slice(1, s.size() - 1), m - 1):
 		res.push_back(s.slice(0, 0) + a)
-	return res + combinations(s.slice(1, s.size() - 1), m)
+	return res + _combinations(s.slice(1, s.size() - 1), m)

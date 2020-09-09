@@ -37,9 +37,13 @@ const CHAR_RANK_TO_INT_RANK = {
 }
 const CHAR_SUIT_TO_INT_SUIT = {
 	's' : 1, # spades
+	'S' : 1, # spades
 	'h' : 2, # hearts
+	'H' : 2, # hearts
 	'd' : 4, # diamonds
+	'D' : 4, # diamonds
 	'c' : 8, # clubs
+	'C' : 8, # clubs
 }
 const INT_SUIT_TO_CHAR_SUIT = 'xshxdxxxc'
 
@@ -60,6 +64,23 @@ static func from_string(card_string: String):
 	var rank = rank_int << 8
 
 	return bitrank | suit | rank | rank_prime
+
+static func to_str(card: int):
+	var rank_int = get_rank_int(card)
+	var suit_int = get_suit_int(card)
+	return STR_RANKS[rank_int] + INT_SUIT_TO_CHAR_SUIT[suit_int]
+
+static func get_rank_int(card: int):
+	return (card >> 8) & 0xF
+
+static func get_suit_int(card: int):
+	return (card >> 12) & 0xF
+
+static func get_bitrank_int(card: int):
+	return (card >> 16) & 0x1FFF
+
+static func get_prime(card: int):
+	return card & 0x3F
 
 static func prime_product_from_rankbits(rankbits):
 	"""

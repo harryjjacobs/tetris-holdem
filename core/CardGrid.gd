@@ -125,7 +125,6 @@ func sink_cards_to_bottom():
 func _lookup(x: int, y: int):
 	return "%d,%d" % [x, y]
 
-
 class CardTileSorter:
 	static func sort_cards_by_row_descending(a, b):
 		if a.tile_position.y > b.tile_position.y:
