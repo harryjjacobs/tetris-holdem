@@ -1,4 +1,4 @@
-# tetris holdem
+# tetris holdem (WiP)
 
 What it sounds like pretty much
 
