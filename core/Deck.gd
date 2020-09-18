@@ -20,7 +20,7 @@ func init():
 	for suit in SUIT:
 		for rank in RANK:
 			var card = CARD_TILE.instance()
-			card.init(suit, rank, card_width)
+			card.init(SUIT[suit], RANK[rank], card_width)
 			card.visible = false
 			add_child(card)
 			deck.push_back(card)

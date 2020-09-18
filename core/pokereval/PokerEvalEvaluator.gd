@@ -14,29 +14,61 @@ var TENS = [
 	PokerEvalCard.from_string("Ts")
 ]
 
-var table = {}
+var table
 
-func _init():
-	table = PokerEvalLookupTable.new()
-
+func _init(_table = null):
+	if _table:
+		table = _table
+	else:
+		table = PokerEvalLookupTable.new()
+		
 func evaluate(cards):
+	"""
+	Performs evaluation on all subsets of 5 cards
+	in the specified set to determine the best ranking, 
+	and returns this ranking.
+	"""
 	var evaluation
 	match cards.size():
 		5: evaluation = _evaluate_five(cards)
-		_: evaluation = _evaluate_many(cards)
+		_: evaluation = _evaluate(cards)
 
 	evaluation.cards.sort()	# ascending
 
 	var result = { "cards": [] }
 	result.category = get_rank_class(evaluation.score)
+	result.rank = evaluation.score
 	for card_int in evaluation.cards:
 		result.cards.push_back(PokerEvalCard.to_str(card_int))
-
 	if result.category == PokerEvalLookupTable.\
 		MAX_TO_RANK_CLASS[PokerEvalLookupTable.MAX_STRAIGHT_FLUSH]:
 		if result.cards[0] in TENS:	# lowest card in straight card has value of 10
 			result.category = 0  # royal straight flush
 	return result
+
+func evaluate_many(cards):
+	"""
+	Evaluates all subsets of 5 cards
+	in the specified set to determine the rankings, 
+	and returns these rankings.
+	"""
+	var evaluations = _evaluate_many(cards)
+
+	var results = []
+	for evaluation in evaluations:
+		evaluation.cards.sort()	# ascending
+		var result = {}
+		result.category = get_rank_class(evaluation.score)
+		result.rank = evaluation.score
+		result.cards = []
+		for card_int in evaluation.cards:
+			result.cards.push_back(PokerEvalCard.to_str(card_int))
+			if result.category == PokerEvalLookupTable.\
+				MAX_TO_RANK_CLASS[PokerEvalLookupTable.MAX_STRAIGHT_FLUSH]:
+				if result.cards[0] in TENS:	# lowest card in straight card has value of 10
+					result.category = 0  # royal straight flush
+		results.push_back(result)
+	return results
 
 func _evaluate_five(cards):
 	"""
@@ -56,14 +88,10 @@ func _evaluate_five(cards):
 	# otherwise
 	else:
 		var prime = PokerEvalCard.prime_product_from_hand(cards)
-		# for some reason dictionary lookup is broken so I have to
-		# do it like this. TODO: submit a bug report to godot
-		var idx = table.unsuited_lookup.keys().find(prime)
-		result.score = table.unsuited_lookup.values()[idx]
-
+		result.score = table.unsuited_lookup[prime]
 	return result
 
-func _evaluate_many(cards):
+func _evaluate(cards):
 	"""
 	Performs five_card_eval() on all subsets of 5 cards
 	in the specified set to determine the best ranking, 
@@ -78,6 +106,18 @@ func _evaluate_many(cards):
 			minimum = _result.score
 			result = _result
 	return result
+
+func _evaluate_many(cards):
+	"""
+	Performs five_card_eval() on all subsets of 5 cards
+	in the specified set to determine the ranking of all 
+	hands.
+	"""
+	var results = []
+	var all5cardcombos = _combinations(cards, 5)
+	for combo in all5cardcombos:
+		results.push_back(self._evaluate_five(combo))
+	return results
 
 func get_rank_class(hr):
 	"""

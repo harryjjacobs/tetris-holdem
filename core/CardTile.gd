@@ -93,10 +93,8 @@ var tile_position: Vector2
 func init(_suit, _rank, _max_sprite_width = 10):
 	suit = _suit;
 	rank = _rank;
-	print(RANK[rank])
-	print(RANK_TO_STRING[RANK[rank]])
 	$CardSprite.texture = load(SPRITE_NAME_TEMPLATE %
-		[RANK_TO_STRING[RANK[rank]], SUIT_TO_STRING[SUIT[suit]].to_upper()])
+		[RANK_TO_STRING[rank], SUIT_TO_STRING[suit].to_upper()])
 	var scale = _max_sprite_width / $CardSprite.texture.get_width()
 	$CardSprite.scale = Vector2(scale, scale)
 	set_glow(false)
@@ -129,7 +127,12 @@ func equals(card):
 		   rank == card.rank
 
 func to_string():
-	return RANK_TO_STRING[RANK[rank]] + SUIT_TO_STRING[SUIT[suit]]
+	return RANK_TO_STRING[rank] + SUIT_TO_STRING[suit]
+
+static func from_string(card_string: String):
+	var card = load("res://core/CardTile.tscn").instance()
+	card.init(STRING_TO_SUIT[card_string[1]], STRING_TO_RANK[card_string[0]])
+	return card
 
 func _reset_sprite_after_exit_tween(tf):
 	visible = false

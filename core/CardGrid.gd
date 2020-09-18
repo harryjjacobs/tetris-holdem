@@ -46,6 +46,9 @@ func clear_cards():
 	_grid = {}
 	return cards
 
+func get_cards():
+	return _grid.values()
+
 func is_cell_free(cell_pos: Vector2):
 	var pos = cell_pos.floor()
 	return is_cell_free_xy(pos.x, pos.y)
@@ -110,9 +113,8 @@ func sink_cards_to_bottom():
 	var sorted_cards = [] + _grid.values()
 	# sort so bottom-most cards are first. sink down from the bottom up
 	sorted_cards.sort_custom(CardTileSorter, "sort_cards_by_row_descending")
-	print("sink")
+	print("Sinking cards down")
 	for card in sorted_cards:
-		print(card)
 		var lowest = false
 		while !lowest:
 			var pos_below = Vector2(card.tile_position.x, card.tile_position.y + 1)
@@ -122,6 +124,24 @@ func sink_cards_to_bottom():
 			else:
 				move_card(card, pos_below)
 
+func get_neighbours(card: CardTile):
+	var x = card.tile_position.x
+	var y = card.tile_position.y
+	var neighbours = []
+	var above = get_card_at_xy(x, y - 1)
+	var below = get_card_at_xy(x, y + 1)
+	var left = get_card_at_xy(x - 1, y)
+	var right = get_card_at_xy(x + 1, y)
+	if above:
+		neighbours.push_back(above)
+	if below:
+		neighbours.push_back(below)
+	if left:
+		neighbours.push_back(left)
+	if right:
+		neighbours.push_back(right)
+	return neighbours
+	
 func _lookup(x: int, y: int):
 	return "%d,%d" % [x, y]
 

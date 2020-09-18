@@ -40,12 +40,8 @@ var _game_state = {
 	"executing_showdown": false
 }
 
-var evaluator
-
 func init():
-	evaluator = PokerEvalEvaluator.new()
 	_poker_state.stage = PokerStages.PREFLOP
-	print_debug(_poker_state)
 	$Deck.init()
 
 func _process(_delta):
@@ -96,8 +92,10 @@ func _showdown():
 			$Community.remove_card(card)
 		card.set_glow(true)
 		$Showdown.add_card(card)
-
-	$Showdown/ShowdownTitle.show_category(winning_hand.category)
+	
+	var PokerUtils = get_node("/root/PokerUtils")
+	var category_name = PokerUtils.rank_category_friendly_name(winning_hand.category)
+	$Showdown/ShowdownTitle.show_category(category_name)
 
 	# wait x seconds, then resume execution
 	yield(get_tree().create_timer(showdown_display_duration), "timeout")
@@ -174,54 +172,94 @@ func _clear_community_cards():
 func _is_poker_stage_finished():
 	return _poker_state.descent_count >= _poker_state.stage.DESCEND
 
+# ===== POKER EVALUATION LOGIC ===== 
+
 func _find_scoring_cards():
-	var grid_card_combos = _generate_grid_combos()
-	var best_hand = { "category": PokerUtils.RANK_CATEGORY.HIGH_CARD }
+	# TODO: performance timer
+	var PokerUtils = get_node("/root/PokerUtils")
+	var grid_card_combos = _find_grid_combos()
+	print("Found ", grid_card_combos.size(), " combos in the grid")
+	var best_rank = PokerUtils.MAX_RANK
+	var best_hand
 	for combo in grid_card_combos:
-		var full_hand = [] + $Community.cards + combo
-		var str_hand = card_array_to_string_array(full_hand)
-		print("Checking combination: ", str_hand)
-		var result = evaluator.evaluate(
-			PokerUtils.str_cards_to_pokereval_cards(str_hand))
-		#print("Category: ", PokerUtils.rank_category_friendly_name(result.category))
-		if result.category == PokerUtils.RANK_CATEGORY.HIGH_CARD || \
-			result.category < best_hand.category:	# lower is better
-			best_hand.card_strs = result.cards
-			best_hand.category = result.category
-			best_hand.original_hand = full_hand
-			best_hand.original_hand_str = str_hand
-			best_hand.cards = []
-			for card_str in best_hand.card_strs:
-				best_hand.cards.push_back(PokerUtils.find_card_by_string(
-					full_hand, card_str))
+		print("Evaluating combo ",
+			PokerUtils.card_array_to_string_array(combo),
+			" + community cards ",
+			PokerUtils.card_array_to_string_array($Community.cards))
+		var result = _evaluate_combo($Community.cards, combo)
+		if result.rank <= best_rank:	# lower is better
+			best_hand = result
+			best_rank = result.rank
 	print("Calculated best hand combination:")
-	print(best_hand.original_hand_str)
 	print(PokerUtils.rank_category_friendly_name(best_hand.category))
-	print(best_hand.cards)
-	print("Found corresponding card nodes for winning hand:", 
-		card_array_to_string_array(best_hand.cards))
+	print("Hand: ", 
+		PokerUtils.card_array_to_string_array(best_hand.cards))
 	return best_hand
 
-func _generate_grid_combos():
-	# find each card and each pair made between neighbours
-	var grid_card_combos = []
-	for i in range(0, $CardGrid.grid_cols):
-		for j in range(0, $CardGrid.grid_rows):
-			var card = $CardGrid.get_card_at_xy(i, j)
-			if card == null:
-				continue
-			grid_card_combos.push_back([card])
-			# make pairs from card below and card to the right
-			var below = $CardGrid.get_card_at_xy(i, j + 1)
-			var right = $CardGrid.get_card_at_xy(i + 1, j)
-			if below:
-				grid_card_combos.push_back([card, below])
-			if right:
-				grid_card_combos.push_back([card, right])
-	return grid_card_combos
-	
-static func card_array_to_string_array(cards):
-	var str_arr = []
-	for card in cards:
-		str_arr.push_back(card.to_string().replace("10", "T"))
-	return str_arr
+func _evaluate_combo(community_cards, combo_cards):
+	var PokerUtils = get_node("/root/PokerUtils")
+	var full_hand = [] + community_cards + combo_cards
+	var results = PokerUtils.evaluate_many(full_hand)
+	var best_rank = PokerUtils.MAX_RANK	# max rank is worst rank
+	var best_result
+	for result in results:
+		var cards = []
+		var grid_cards = []
+		for card_str in result.cards:
+			var card = PokerUtils.find_card_by_string(full_hand, card_str)
+			cards.push_back(card)
+			if card in combo_cards:
+				grid_cards.push_back(card)
+		result.cards = cards
+		#print("Comparing result for ", 
+		#	PokerUtils.card_array_to_string_array(result.cards), "(",
+		#	PokerUtils.rank_category_friendly_name(result.category), ")")
+		# check if grid combo cards used for this evaluation
+		# combination are connected with no separations,
+		# in a group in the grid
+		if !_are_grid_cards_in_group(grid_cards):
+			continue
+		if result.rank <= best_rank:	# lower rank is better
+			best_result = result
+			best_rank = result.rank
+	print("Highest rank: ", best_result.rank, " (", 
+		PokerUtils.rank_category_friendly_name(best_result.category), ")")
+	return best_result
+
+# checks whether the cards are in one group
+# block in the card grid with no separation
+func _are_grid_cards_in_group(cards):
+	var neighbour_sum = 0;
+	var MIN_SUM = cards.size() * 2 - 2
+	for combo_card in cards:
+		var neighbours = $CardGrid.get_neighbours(combo_card)
+		for neighbour in neighbours:
+			if neighbour in cards:
+				neighbour_sum += 1
+	return neighbour_sum >= MIN_SUM
+
+# finds all combinations of connected cards (up to and incl. size 5)
+func _find_grid_combos():
+	var combos = []
+	for card in $CardGrid.get_cards():
+		combos += _card_grid_find_all_subsets(card, 5)
+	return combos
+
+func _card_grid_find_all_subsets(card: CardTile, max_size: int = 5):
+	# performs a variation on Breadth First Search to find all subsets
+	# with specified maximum size
+	var subsets = [[]]
+	var queue = []
+	var discovered = {card.to_string(): card}
+	queue.push_back(card)
+	while !queue.empty():
+		var current = queue.pop_front()
+		subsets[-1].push_back(current)
+		if subsets[-1].size() == max_size:
+			subsets.push_back([])
+		for neighbour in $CardGrid.get_neighbours(current):
+			var card_str = neighbour.to_string()
+			if !discovered.has(card_str):
+				discovered[card_str] = neighbour
+				queue.push_back(neighbour)
+	return subsets

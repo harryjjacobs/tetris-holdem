@@ -1,8 +1,15 @@
-# Helper functions for poker
-# Functions assume cards are sorted in ascending order
+# Singleton class containing helper functions for poker evaluation and card utilities
+
+extends Node
 
 const PokerEvalCard = preload("./pokereval/PokerEvalCard.gd")
 const PokerEvalLookupTable = preload("./pokereval/PokerEvalLookupTable.gd")
+const PokerEvalEvaluator = preload("./pokereval/PokerEvalEvaluator.gd")
+
+const UNSUITED_LOOKUP_FILE = "user://unsuited_lookup.csv"
+const FLUSH_LOOKUP_FILE = "user://flush_lookup.csv"
+
+const MAX_RANK = PokerEvalLookupTable.MAX_HIGH_CARD
 
 enum RANK_CATEGORY {
 	ROYAL_FLUSH = 0,
@@ -30,153 +37,92 @@ const RANK_CATEGORY_FRIENDLY_NAME = {
 	RANK_CATEGORY.HIGH_CARD: "High Card",
 }
 
-static func rank_category_friendly_name(category):
+var evaluator
+
+func _init():
+	if !read_tables_from_userdata():
+		var table = PokerEvalLookupTable.new()
+		evaluator = PokerEvalEvaluator.new(table)
+		write_tables_to_userdata(table)
+
+func rank_category_friendly_name(category):
 	return RANK_CATEGORY_FRIENDLY_NAME[category]
 
-# converts an array of pokereval int representation cards
-# from an array of string representation cards
-static func str_cards_to_pokereval_cards(str_cards: Array):
-	var cards = []
-	for str_card in str_cards:
-		cards.push_back(PokerEvalCard.from_string(str_card))
-	return cards
+func evaluate(cards: Array):
+	var pokereval_cards = cardtile_array_to_pokereval_array(cards)
+	return evaluator.evaluate(pokereval_cards)
+
+# returns evaluations for all combinations of cards choose 5
+func evaluate_many(cards: Array):
+	var pokereval_cards = cardtile_array_to_pokereval_array(cards)
+	return evaluator.evaluate_many(pokereval_cards)
+
+func card_array_to_string_array(cards: Array):
+	var card_strs = []
+	for card in cards:
+		card_strs.push_back(card.to_string())
+	return card_strs
+
+func cardtile_array_to_pokereval_array(cards: Array):
+	var pokereval_hand = []
+	for card in cards:
+		pokereval_hand.push_back(PokerEvalCard.from_string(card.to_string()))
+	return pokereval_hand
 
 # find card in array of cards by string representation
-static func find_card_by_string(cards, card_str):
+func find_card_by_string(cards, card_str):
 	for card in cards:
-		if card.to_string().replace("10", "T").to_lower() == card_str.to_lower():
+		if card.to_string().to_lower() == card_str.to_lower():
 			return card
-	print("FAILED TO FIND CARD: ", card_str)
-	for card in cards:
-		print(card.to_string())
 
-static func write_tables_to_userdata():
-	var table = PokerEvalLookupTable.new()
+func write_tables_to_userdata(table: PokerEvalLookupTable):
 	var file = File.new()
-	file.open("user://unsuited_lookup.csv", File.WRITE)
+
+	file.open(UNSUITED_LOOKUP_FILE, File.WRITE)
 	for key in table.unsuited_lookup:
 		file.store_csv_line([str(key), str(table.unsuited_lookup[key])])
 	file.close()
-	file.open("user://flush_lookup.csv", File.WRITE)
+
+	file.open(FLUSH_LOOKUP_FILE, File.WRITE)
 	for key in table.flush_lookup:
 		file.store_csv_line([str(key), str(table.flush_lookup[key])])
 	file.close()
+	
 	print("Table lookup files written to user data")
 
-# The HandEval library returns the rank category, use this
-# to identify which card nodes represent the winning cards
-static func find_cards_from_category(cards, category):
-	var _cards = [] + cards # local copy
-	_cards.sort_custom(CardSorter, "sort_cards_descending")
-	match category:
-		RANK_CATEGORY.ONE_PAIR:
-			return _find_highest_pair(_cards)
-		RANK_CATEGORY.TWO_PAIR:
-			var first_pair = _find_highest_pair(_cards)
-			for card in first_pair:
-				_cards.remove(_cards.find(card))
-			return first_pair + _find_highest_pair(_cards)
-		RANK_CATEGORY.THREE_OF_A_KIND:
-			return _find_highest_three_of_kind(_cards)
-		RANK_CATEGORY.STRAIGHT:
-			return _find_highest_straight(_cards)
-		RANK_CATEGORY.FLUSH:
-			return _find_highest_flush(_cards)
-		RANK_CATEGORY.FULL_HOUSE:
-			return _find_highest_full_house(_cards)
-		RANK_CATEGORY.FOUR_OF_A_KIND:
-			return _find_highest_four_of_kind(_cards)
-		RANK_CATEGORY.STRAIGHT_FLUSH:
-			return _find_highest_straight(_cards)
-		RANK_CATEGORY.ROYAL_FLUSH:
-			return _find_royal_flush(_cards)
-		_:
-			printerr("Invalid category")
+func read_tables_from_userdata():
+	var file = File.new()
+	var unsuited_lookup = {}
+	var flush_lookup = {}
 
-static func _find_highest_pair(cards):
-	for i in range(1, cards.size()):
-		if (cards[i].rank == cards[i - 1].rank):
-			return [cards[i - 1], cards[i]]
+	if !file.file_exists(UNSUITED_LOOKUP_FILE):
+		return false
 
-static func _find_highest_two_pair(cards):
-	var pairs = []
-	for i in range(1, cards.size()):
-		if (cards[i].rank == cards[i - 1].rank):
-			pairs.push_back(cards[i - 1])
-			pairs.push_back(cards[i])
-			if pairs.size() == 4:
-				return pairs
-			i += 1
+	file.open(UNSUITED_LOOKUP_FILE, File.READ)
+	while !file.eof_reached():
+		var values = file.get_csv_line()
+		if values.size() == 2:
+			unsuited_lookup[int(values[0])] = int(values[1])
+	file.close()
 
-static func _find_highest_three_of_kind(cards):
-	for i in range(2, cards.size()):
-		if (cards[i].rank == cards[i - 1].rank) && \
-			(cards[i].rank == cards[i - 2].rank):
-			return [cards[i - 2], cards[i - 1], cards[i]]
+	if !file.file_exists(FLUSH_LOOKUP_FILE):
+		return false
 
-static func _find_highest_straight(cards):
-	for i in range(4, cards.size()):
-		if (cards[i - 4].rank - cards[i].rank) == 4:
-			return [cards[i - 4], cards[i - 3], 
-					cards[i - 2], cards[i - 1], 
-					cards[i]]
+	file.open(FLUSH_LOOKUP_FILE, File.READ)
+	while !file.eof_reached():
+		var values = file.get_csv_line()
+		if values.size() == 2:
+			flush_lookup[int(values[0])] = int(values[1])
+	file.close()
 
-static func _find_highest_flush(cards):
-	var suit_keys = CardTile.SUIT.keys()
-	var counts = {
-		suit_keys[0]: [],
-		suit_keys[1]: [],
-		suit_keys[2]: [],
-		suit_keys[3]: [],
-	}
-	for card in cards:
-		counts[card.suit].push_back(card)
-		if counts[card.suit].size() == 5:
-			return counts[card.suit]
+	print("Table lookup files written to user data")
+	var table = PokerEvalLookupTable.new(flush_lookup, unsuited_lookup)
+	evaluator = PokerEvalEvaluator.new(table)
 
-static func _find_highest_full_house(cards):
-	var highest_three_of_kind = _find_highest_three_of_kind(cards)
-	# find highest pair that doesn't include the 3 of a kind
-	for i in range(1, cards.size()):
-		if (cards[i].rank != highest_three_of_kind[0].rank) && \
-		   (cards[i].rank == cards[i - 1].rank):
-			return highest_three_of_kind + [cards[i - 1], cards[i]]
+	print(flush_lookup.size())
 
-static func _find_highest_four_of_kind(cards):
-	for i in range(3, cards.size()):
-		if (cards[i].rank == cards[i - 1].rank) && \
-		   (cards[i].rank == cards[i - 2].rank) && \
-		   (cards[i].rank == cards[i - 3].rank):
-			return [cards[i - 3], cards[i - 2],
-					cards[i - 1], cards[i]]
-
-static func _find_highest_straight_flush(cards):
-	var highest_rank = 0
-	var straight_flush
-	for suit in _separate_by_suit(cards):
-		var straight = _find_highest_straight(suit)
-		if straight && straight[0].rank > highest_rank:
-			straight_flush = straight
-			highest_rank = straight[0].rank
-	return straight_flush
-
-static func _find_royal_flush(cards):
-	var straight_flush = _find_highest_straight_flush(cards)
-	if straight_flush[0].rank != 14:
-		printerr("Assertion that 'cards' contains a royal flush is incorrect.")
-	return straight_flush
-
-static func _separate_by_suit(cards):
-	var suit_keys = CardTile.SUIT.keys()
-	var hands = {
-		suit_keys[0]: [],
-		suit_keys[1]: [],
-		suit_keys[2]: [],
-		suit_keys[3]: [],
-	}
-	for card in cards:
-		hands[card.suit].push_back(card)
-	return hands
+	return flush_lookup.size() == 1287 && \
+			unsuited_lookup.size() == 6175
 
 class CardSorter:
 	static func sort_cards_descending(a, b):

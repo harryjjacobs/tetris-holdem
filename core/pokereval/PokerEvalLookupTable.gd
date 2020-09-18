@@ -59,11 +59,15 @@ const RANK_CLASS_TO_STRING = {
 var flush_lookup = {}
 var unsuited_lookup = {}
 
-func _init():
-	# create the lookup table in piecewise fashion
-	flushes()  # this will call straights and high cards method,
-	# we reuse some of the bit sequences
-	multiples()
+func _init(_flush_lookup = null, _unsuited_lookup = null):
+	if _flush_lookup:
+		flush_lookup = _flush_lookup
+	else:
+		flushes()  # this will call straights and high cards method
+	if _unsuited_lookup:
+		unsuited_lookup = _unsuited_lookup
+	else:
+		multiples()	# we reuse some of the bit sequences
 
 func flushes():
 	"""
