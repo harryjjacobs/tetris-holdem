@@ -115,11 +115,9 @@ func read_tables_from_userdata():
 			flush_lookup[int(values[0])] = int(values[1])
 	file.close()
 
-	print("Table lookup files written to user data")
+	print("Table lookup files read from user data.")
 	var table = PokerEvalLookupTable.new(flush_lookup, unsuited_lookup)
 	evaluator = PokerEvalEvaluator.new(table)
-
-	print(flush_lookup.size())
 
 	return flush_lookup.size() == 1287 && \
 			unsuited_lookup.size() == 6175
