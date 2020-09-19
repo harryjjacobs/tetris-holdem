@@ -93,9 +93,13 @@ func _showdown():
 		card.set_glow(true)
 		$Showdown.add_card(card)
 	
+	# display showdown
 	var PokerUtils = get_node("/root/PokerUtils")
 	var category_name = PokerUtils.rank_category_friendly_name(winning_hand.category)
 	$Showdown/ShowdownTitle.show_category(category_name)
+
+	# award points
+	$Score.increase(winning_hand.rank)
 
 	# wait x seconds, then resume execution
 	yield(get_tree().create_timer(showdown_display_duration), "timeout")
