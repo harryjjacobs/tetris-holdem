@@ -93,9 +93,13 @@ func _showdown():
 		card.set_glow(true)
 		$Showdown.add_card(card)
 	
+	# display showdown
 	var PokerUtils = get_node("/root/PokerUtils")
 	var category_name = PokerUtils.rank_category_friendly_name(winning_hand.category)
 	$Showdown/ShowdownTitle.show_category(category_name)
+
+	# award points
+	$Score.increase(winning_hand.rank)
 
 	# wait x seconds, then resume execution
 	yield(get_tree().create_timer(showdown_display_duration), "timeout")
@@ -130,12 +134,14 @@ func _begin_descent(_card_tile):
 	rng.randomize()
 	var start_pos = Vector2(rng.randi_range(0, $CardGrid.grid_cols - 1), 0)
 	if !$CardGrid.is_cell_free(start_pos):
-		emit_signal("on_game_over")
+		emit_signal("on_game_over", $Score.score)
 	else:
+		$DescentStepTimer.reset()
 		$CardGrid.set_card_at(_game_state.descending_card_tile, start_pos)
 
 func _end_descent():
-	$CardGrid.set_card_at(_game_state.descending_card_tile, _game_state.descending_card_tile.tile_position)
+	$CardGrid.set_card_at(_game_state.descending_card_tile,
+		_game_state.descending_card_tile.tile_position)
 	_game_state.descending_card_tile = null
 	_poker_state.descent_count += 1
 
