@@ -15,12 +15,18 @@ _global_script_classes=[ {
 "path": "res://core/CardTile.gd"
 }, {
 "base": "Reference",
+"class": "GameData",
+"language": "GDScript",
+"path": "res://core/GameData.gd"
+}, {
+"base": "Reference",
 "class": "PokerEvalUtils",
 "language": "GDScript",
 "path": "res://core/pokereval/PokerEvalUtils.gd"
 } ]
 _global_script_class_icons={
 "CardTile": "",
+"GameData": "",
 "PokerEvalUtils": ""
 }
 
