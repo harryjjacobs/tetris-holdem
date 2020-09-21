@@ -35,6 +35,9 @@ func _handle_pause(delta):
 		if _paused_timeout <= 0:
 			resume()
 
+func reset():
+	_time = step_duration
+
 # Set to < 0 for indefinite pause
 func pause(duration = -1.0):
 	_paused = true
