@@ -6,9 +6,6 @@ const PokerEvalCard = preload("./pokereval/PokerEvalCard.gd")
 const PokerEvalLookupTable = preload("./pokereval/PokerEvalLookupTable.gd")
 const PokerEvalEvaluator = preload("./pokereval/PokerEvalEvaluator.gd")
 
-const UNSUITED_LOOKUP_FILE = "user://unsuited_lookup.csv"
-const FLUSH_LOOKUP_FILE = "user://flush_lookup.csv"
-
 const MAX_RANK = PokerEvalLookupTable.MAX_HIGH_CARD
 
 enum RANK_CATEGORY {
@@ -41,6 +38,7 @@ var evaluator
 
 func _init():
 	if !read_tables_from_userdata():
+		print("Failed to read tables from userdata. Generating tables.")
 		var table = PokerEvalLookupTable.new()
 		evaluator = PokerEvalEvaluator.new(table)
 		write_tables_to_userdata(table)
@@ -76,51 +74,27 @@ func find_card_by_string(cards, card_str):
 			return card
 
 func write_tables_to_userdata(table: PokerEvalLookupTable):
-	var file = File.new()
 
-	file.open(UNSUITED_LOOKUP_FILE, File.WRITE)
-	for key in table.unsuited_lookup:
-		file.store_csv_line([str(key), str(table.unsuited_lookup[key])])
-	file.close()
+	GameData.write_lookup_tables(table.unsuited_lookup, table.flush_lookup)
 
-	file.open(FLUSH_LOOKUP_FILE, File.WRITE)
-	for key in table.flush_lookup:
-		file.store_csv_line([str(key), str(table.flush_lookup[key])])
-	file.close()
-	
 	print("Table lookup files written to user data")
 
 func read_tables_from_userdata():
-	var file = File.new()
-	var unsuited_lookup = {}
-	var flush_lookup = {}
+	var tables = GameData.read_lookup_tables()
 
-	if !file.file_exists(UNSUITED_LOOKUP_FILE):
+	if !tables:
 		return false
 
-	file.open(UNSUITED_LOOKUP_FILE, File.READ)
-	while !file.eof_reached():
-		var values = file.get_csv_line()
-		if values.size() == 2:
-			unsuited_lookup[int(values[0])] = int(values[1])
-	file.close()
-
-	if !file.file_exists(FLUSH_LOOKUP_FILE):
+	if tables.flush_lookup.size() != 1287 || \
+		tables.unsuited_lookup.size() != 6175:
 		return false
-
-	file.open(FLUSH_LOOKUP_FILE, File.READ)
-	while !file.eof_reached():
-		var values = file.get_csv_line()
-		if values.size() == 2:
-			flush_lookup[int(values[0])] = int(values[1])
-	file.close()
 
 	print("Table lookup files read from user data.")
-	var table = PokerEvalLookupTable.new(flush_lookup, unsuited_lookup)
+
+	var table = PokerEvalLookupTable.new(tables.flush_lookup, tables.unsuited_lookup)
 	evaluator = PokerEvalEvaluator.new(table)
 
-	return flush_lookup.size() == 1287 && \
-			unsuited_lookup.size() == 6175
+	return true
 
 class CardSorter:
 	static func sort_cards_descending(a, b):

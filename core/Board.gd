@@ -134,12 +134,14 @@ func _begin_descent(_card_tile):
 	rng.randomize()
 	var start_pos = Vector2(rng.randi_range(0, $CardGrid.grid_cols - 1), 0)
 	if !$CardGrid.is_cell_free(start_pos):
-		emit_signal("on_game_over")
+		emit_signal("on_game_over", $Score.score)
 	else:
+		$DescentStepTimer.reset()
 		$CardGrid.set_card_at(_game_state.descending_card_tile, start_pos)
 
 func _end_descent():
-	$CardGrid.set_card_at(_game_state.descending_card_tile, _game_state.descending_card_tile.tile_position)
+	$CardGrid.set_card_at(_game_state.descending_card_tile,
+		_game_state.descending_card_tile.tile_position)
 	_game_state.descending_card_tile = null
 	_poker_state.descent_count += 1
 

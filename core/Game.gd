@@ -9,6 +9,7 @@ var PokerEvalEvaluator = preload("./pokereval/PokerEvalEvaluator.gd")
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	GameData.write_high_score(10)
 	var _err = $Board.connect("on_game_over", self, "_on_game_over")
 	_start()
 
@@ -30,6 +31,9 @@ func _start():
 	$Board.init()
 	_game_state = GameState.PLAYING
 
-func _on_game_over():
+func _on_game_over(score):
 	print("GAME OVER")
 	_game_state = GameState.OVER
+	# do game over things
+	# write highscore to file
+	GameData.write_high_score(score)
