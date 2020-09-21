@@ -25,6 +25,7 @@ func init():
 			add_child(card)
 			deck.push_back(card)
 	assert(deck.size() == 52)
+	randomize()
 	deck.shuffle()
 	
 func get_next_card():
