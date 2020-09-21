@@ -40,8 +40,8 @@ func _init():
 	if !read_tables_from_userdata():
 		print("Failed to read tables from userdata. Generating tables.")
 		var table = PokerEvalLookupTable.new()
-		evaluator = PokerEvalEvaluator.new(table)
 		write_tables_to_userdata(table)
+		read_tables_from_userdata()
 
 func rank_category_friendly_name(category):
 	return RANK_CATEGORY_FRIENDLY_NAME[category]
