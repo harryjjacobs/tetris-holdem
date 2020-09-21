@@ -83,13 +83,11 @@ func game_loop():
 func _showdown():
 	_game_state.executing_showdown = true
 	var winning_hand = _find_scoring_cards()
-	var empty_grid_spaces = []
 	for card in winning_hand.cards:
-		if $CardGrid.contains_card(card):
-			$CardGrid.remove_card(card)
-			empty_grid_spaces.push_back(card.tile_position)
-		else:
+		if card in $Community.cards():
 			$Community.remove_card(card)
+		else:
+			$CardGrid.remove_card(card)
 		card.set_glow(true)
 		$Showdown.add_card(card)
 	
