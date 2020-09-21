@@ -84,7 +84,7 @@ func _showdown():
 	_game_state.executing_showdown = true
 	var winning_hand = _find_scoring_cards()
 	for card in winning_hand.cards:
-		if card in $Community.cards():
+		if card in $Community.cards:
 			$Community.remove_card(card)
 		else:
 			$CardGrid.remove_card(card)
