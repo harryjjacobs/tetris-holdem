@@ -84,21 +84,25 @@ func remove_card_at_xy(x: int, y: int):
 	TreeUtils.change_parent_preserve_global_position(card, get_tree().get_root())
 	return card
 
-func set_card_at(card: CardTile, tile_pos: Vector2):
+func set_card_at(card: CardTile, tile_pos: Vector2, move_duration: float = -1):
 	var pos = tile_pos.floor()
-	set_card_at_xy(card, pos.x, pos.y)
+	set_card_at_xy(card, pos.x, pos.y, move_duration)
 
-func set_card_at_xy(card: CardTile, x: int, y: int):
+func set_card_at_xy(card: CardTile, x: int, y: int, move_duration: float = -1):
 	_grid[_lookup(x, y)] = card
 	if card.get_parent():
-		card.get_parent().remove_child(card)
-	add_child(card)
-	var pos = Vector2(x, y)
-	card.tile_position = pos
-	# TODO: tween
-	card.position = cell2pos(pos) + \
+		TreeUtils.change_parent_preserve_global_position(card, self)
+	else:
+		add_child(card)
+	var tile_pos = Vector2(x, y)
+	card.tile_position = tile_pos
+	var pos = cell2pos(tile_pos) + \
 		(card.get_size() / 2) + \
 		Vector2(line_width / 2, line_width / 2)
+	if move_duration > 0:
+		card.tween_to_position(pos, Tween.TRANS_EXPO, Tween.EASE_OUT, move_duration)
+	else:
+		card.position = pos
 
 func move_card(card: CardTile, new_pos: Vector2):
 	var old_pos = card.tile_position.floor()

@@ -81,7 +81,7 @@ const STRING_TO_SUIT = {
 }
 
 export(String) var card_sprite_directory = "res://core/sprites/cards"
-export(float) var tween_duration_position = 0.7
+export(float) var tween_duration_position = 0.6
 export(float) var tween_duration_exit = 0.5
 
 var SPRITE_NAME_TEMPLATE = card_sprite_directory + "/card%s%s.png"
@@ -102,11 +102,11 @@ func init(_suit, _rank, _max_sprite_width = 10):
 func set_glow(state):
 	$CardSprite/Glow.visible = state
 
-func tween_to_position(target_pos: Vector2):
+func tween_to_position(target_pos: Vector2, transition = Tween.TRANS_BACK, easing = Tween.EASE_IN_OUT, duration = tween_duration_position):
 	$CardSprite.position -= target_pos - position
 	position = target_pos
 	$Tween.interpolate_property($CardSprite, "position", $CardSprite.position,
-		Vector2.ZERO, tween_duration_position, Tween.TRANS_BACK, Tween.EASE_IN_OUT)
+		Vector2.ZERO, duration, transition, easing)
 	$Tween.start()
 
 func animate_exit():

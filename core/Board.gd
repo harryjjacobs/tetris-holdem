@@ -23,7 +23,8 @@ const PokerStages = {
 	}
 }
 
-export(float) var community_deal_duration = 2.0
+export(float) var community_deal_pause_duration = 2.0
+export(float) var cardgrid_deal_duration = 0.2
 export(float) var showdown_display_duration = 2.0
 export(float) var multicard_animation_delay = 0.05
 
@@ -136,12 +137,13 @@ func _begin_descent(_card_tile):
 	if !$CardGrid.is_cell_free(start_pos):
 		emit_signal("on_game_over", $Score.score)
 	else:
+		$MovementCooldownTimer.pause(cardgrid_deal_duration)
 		$DescentStepTimer.reset()
-		$CardGrid.set_card_at(_game_state.descending_card_tile, start_pos)
+		$DescentStepTimer.pause(cardgrid_deal_duration)
+		$CardGrid.set_card_at(_game_state.descending_card_tile, start_pos, 
+			cardgrid_deal_duration)
 
 func _end_descent():
-	$CardGrid.set_card_at(_game_state.descending_card_tile,
-		_game_state.descending_card_tile.tile_position)
 	_game_state.descending_card_tile = null
 	_poker_state.descent_count += 1
 
@@ -169,7 +171,7 @@ func _translate_card_tile(pos):
 func _add_community_cards(poker_stage):
 	for _i in range(0, poker_stage.COMMUNITY):
 		$Community.add_card($Deck.get_next_card())
-	$DescentStepTimer.pause(community_deal_duration)
+	$DescentStepTimer.pause(community_deal_pause_duration)
 
 func _clear_community_cards():
 	var cleared = $Community.clear_cards()
