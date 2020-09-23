@@ -39,7 +39,7 @@ grid_rows = 6
 size = Vector2( 420, 568 )
 
 [node name="Showdown" parent="." instance=ExtResource( 9 )]
-position = Vector2( 512, 200 )
+position = Vector2( 512, 221.189 )
 
 [node name="ShowdownTitle" parent="Showdown" instance=ExtResource( 10 )]
 position = Vector2( -3.66345, -124.677 )

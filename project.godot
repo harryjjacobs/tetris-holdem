@@ -39,6 +39,7 @@ config/icon="res://core/icon.png"
 [autoload]
 
 PokerUtils="*res://core/PokerUtils.gd"
+PokerHelper="*res://core/PokerHelper.gd"
 
 [display]
 
