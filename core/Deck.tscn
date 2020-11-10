@@ -3,8 +3,6 @@
 [ext_resource path="res://core/Deck.gd" type="Script" id=1]
 [ext_resource path="res://core/sprites/cards/cardBackStack_red.png" type="Texture" id=2]
 
-
-
 [node name="Deck" type="Node2D"]
 script = ExtResource( 1 )
 
